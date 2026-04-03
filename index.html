@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Ma Cave" />
+<meta name="theme-color" content="#1a0a00" />
+<title>Ma Cave à Vin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #faf8f5;
+    --surface: #ffffff;
+    --surface2: #f4f0eb;
+    --border: rgba(60,30,10,0.12);
+    --border2: rgba(60,30,10,0.22);
+    --text: #1a0a00;
+    --text2: #6b4f3a;
+    --text3: #a8866e;
+    --accent: #8b1a1a;
+    --accent2: #c4973a;
+    --rouge: #8b1a1a;
+    --blanc: #c4973a;
+    --rose: #c45a7a;
+    --champagne: #2e7d52;
+    --mousseux: #2e7d52;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --r: 10px;
+    --r-lg: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #120700;
+      --surface: #1e0e05;
+      --surface2: #2a1508;
+      --border: rgba(255,200,150,0.10);
+      --border2: rgba(255,200,150,0.20);
+      --text: #f5ede4;
+      --text2: #c4a882;
+      --text3: #7a6050;
+      --accent: #c44040;
+      --accent2: #d4a84a;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  .app-header {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .app-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+  }
+  .header-count { font-size: 12px; color: var(--text3); }
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 0; cursor: pointer; border: none; background: none;
+    color: var(--text3); font-family: var(--font-body); font-size: 10px;
+    transition: color 0.15s;
+  }
+  .nav-tab svg { width: 22px; height: 22px; }
+  .nav-tab.active { color: var(--accent); }
+
+  /* ── LAYOUT ── */
+  .main { padding: 1rem 1rem 6rem; max-width: 640px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .wine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .wine-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 0.9rem; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .wine-card:active { transform: scale(0.97); }
+  .type-pill {
+    display: inline-block; font-size: 10px; font-weight: 500;
+    padding: 2px 9px; border-radius: 99px; margin-bottom: 8px;
+    text-transform: capitalize; letter-spacing: 0.04em;
+  }
+  .pill-rouge    { background: rgba(139,26,26,0.12); color: var(--rouge); }
+  .pill-blanc    { background: rgba(196,151,58,0.15); color: var(--blanc); }
+  .pill-rosé     { background: rgba(196,90,122,0.12); color: var(--rose); }
+  .pill-champagne, .pill-mousseux { background: rgba(46,125,82,0.12); color: var(--champagne); }
+  .wine-name { font-family: var(--font-display); font-size: 16px; font-weight: 500; margin-bottom: 2px; line-height: 1.3; }
+  .wine-sub  { font-size: 11px; color: var(--text3); }
+  .wine-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .wine-qty  { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .wine-price{ font-size: 11px; color: var(--text3); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0; padding: 5px 13px; border-radius: 99px;
+    border: 1px solid var(--border2); background: transparent;
+    font-size: 12px; font-family: var(--font-body); color: var(--text2);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .search-wrap { position: relative; margin-bottom: 1rem; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text3); }
+  .search-input {
+    width: 100%; padding: 9px 12px 9px 34px;
+    border: 1px solid var(--border2); border-radius: var(--r);
+    background: var(--surface); color: var(--text);
+    font-family: var(--font-body); font-size: 14px;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  /* ── STATS ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 1rem;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .stat-value { font-family: var(--font-display); font-size: 28px; font-weight: 500; color: var(--text); }
+  .stat-value span { font-size: 14px; color: var(--text3); font-family: var(--font-body); }
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1rem; margin-bottom: 10px; }
+  .section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; font-weight: 500; }
+
+  /* ── BAR CHART ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 100px; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-fill { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; }
+  .bar-val { font-size: 11px; font-weight: 500; color: var(--text2); }
+  .bar-lbl { font-size: 10px; color: var(--text3); text-align: center; }
+
+  /* ── ACCORD TAGS ── */
+  .accord-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .accord-tag {
+    background: var(--surface2); border-radius: var(--r);
+    padding: 5px 11px; font-size: 12px; color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  /* ── REGION LIST ── */
+  .region-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .region-row:last-child { border-bottom: none; }
+  .region-bar-bg { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; margin: 0 10px; }
+  .region-bar-fill { height: 100%; border-radius: 2px; background: var(--accent2); }
+
+  /* ── DETAIL PAGE ── */
+  .detail-hero { margin-bottom: 1.5rem; }
+  .detail-name { font-family: var(--font-display); font-size: 28px; font-weight: 600; line-height: 1.2; margin: 8px 0 4px; }
+  .detail-sub { font-size: 13px; color: var(--text3); }
+  .detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: var(--text3); font-size: 12px; }
+  .qty-controls { display: flex; align-items: center; gap: 12px; }
+  .qty-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid var(--border2); background: transparent;
+    font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text); transition: background 0.1s;
+  }
+  .qty-btn:active { background: var(--surface2); }
+  .qty-num { font-family: var(--font-display); font-size: 22px; font-weight: 500; min-width: 32px; text-align: center; }
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 18px; color: var(--border2); cursor: pointer; transition: color 0.1s; }
+  .star.on { color: var(--accent2); }
+  .degustation-note { font-size: 14px; line-height: 1.7; color: var(--text2); font-style: italic; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5);
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+    width: 100%; max-width: 640px;
+    max-height: 92vh; overflow-y: auto;
+  }
+  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 1.25rem; }
+  .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin-bottom: 1.25rem; color: var(--accent); }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 5px; }
+  .form-input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border2); border-radius: var(--r);
+    background: var(--surface2); color: var(--text);
+    font-family: var(--font-body); font-size: 14px; outline: none;
+    -webkit-appearance: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  textarea.form-input { min-height: 80px; resize: vertical; }
+  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.25rem; }
+  .btn-primary {
+    flex: 1; padding: 12px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--r); font-family: var(--font-body);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .btn-ghost {
+    padding: 12px 16px; background: transparent;
+    border: 1px solid var(--border2); border-radius: var(--r);
+    font-family: var(--font-body); font-size: 14px; cursor: pointer; color: var(--text2);
+  }
+  .btn-danger {
+    padding: 10px 14px; background: transparent;
+    border: 1px solid rgba(180,30,30,0.3); border-radius: var(--r);
+    font-family: var(--font-body); font-size: 13px; cursor: pointer; color: #b41e1e;
+  }
+  .btn-edit {
+    padding: 9px 16px; background: transparent;
+    border: 1px solid var(--border2); border-radius: var(--r);
+    font-family: var(--font-body); font-size: 13px; cursor: pointer; color: var(--text2);
+  }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; color: var(--text3); cursor: pointer;
+    border: none; background: none; margin-bottom: 1rem; padding: 0;
+    font-family: var(--font-body);
+  }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+  .empty-state .big { font-family: var(--font-display); font-size: 48px; margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 14px; }
+  .fab {
+    position: fixed; bottom: calc(64px + env(safe-area-inset-bottom) + 16px); right: 1rem;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent); color: white;
+    border: none; font-size: 26px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(139,26,26,0.4);
+    z-index: 40;
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-title">Ma Cave</div>
+  <div class="header-count" id="header-count"></div>
+</header>
+
+<!-- Pages -->
+<main class="main">
+
+  <div id="page-inventaire" class="page active">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="search" type="search" placeholder="Rechercher un vin..." oninput="renderWines()" />
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-chip active" data-type="" onclick="setFilter('')">Tous</button>
+      <button class="filter-chip" data-type="rouge" onclick="setFilter('rouge')">Rouge</button>
+      <button class="filter-chip" data-type="blanc" onclick="setFilter('blanc')">Blanc</button>
+      <button class="filter-chip" data-type="rosé" onclick="setFilter('rosé')">Rosé</button>
+      <button class="filter-chip" data-type="champagne" onclick="setFilter('champagne')">Champagne</button>
+      <button class="filter-chip" data-type="mousseux" onclick="setFilter('mousseux')">Mousseux</button>
+    </div>
+    <div id="wine-list"></div>
+  </div>
+
+  <div id="page-stats" class="page">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="section-card">
+      <div class="section-title">Répartition par type</div>
+      <div class="bar-chart" id="bar-chart"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Top régions</div>
+      <div id="region-list"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Accords mets-vins suggérés</div>
+      <div class="accord-wrap" id="accord-suggestions"></div>
+    </div>
+  </div>
+
+  <div id="page-detail" class="page">
+    <button class="back-btn" onclick="showPage('inventaire')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      Retour
+    </button>
+    <div id="detail-content"></div>
+  </div>
+
+</main>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openAddModal()" title="Ajouter un vin">+</button>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="tab-inventaire" onclick="showPage('inventaire')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-linecap="round"/></svg>
+    Inventaire
+  </button>
+  <button class="nav-tab" id="tab-stats" onclick="showPage('stats')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round"/></svg>
+    Statistiques
+  </button>
+</nav>
+
+<!-- Modal Ajout/Édition -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Ajouter un vin</div>
+    <input type="hidden" id="edit-id" />
+
+    <div class="form-group">
+      <label class="form-label">Nom du vin *</label>
+      <input class="form-input" id="f-name" type="text" placeholder="ex : Château Margaux" />
+    </div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Type *</label>
+        <select class="form-input" id="f-type">
+          <option value="rouge">Rouge</option>
+          <option value="blanc">Blanc</option>
+          <option value="rosé">Rosé</option>
+          <option value="champagne">Champagne</option>
+          <option value="mousseux">Mousseux</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Millésime</label>
+        <input class="form-input" id="f-year" type="number" placeholder="2019" min="1900" max="2025" />
+      </div>
+    </div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Région</label>
+        <input class="form-input" id="f-region" type="text" placeholder="ex : Bordeaux" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pays</label>
+        <input class="form-input" id="f-country" type="text" placeholder="ex : France" />
+      </div>
+    </div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Quantité *</label>
+        <input class="form-input" id="f-qty" type="number" value="1" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prix / btl (€)</label>
+        <input class="form-input" id="f-price" type="number" placeholder="0" min="0" step="0.5" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note</label>
+      <div class="stars" id="modal-stars">
+        <span class="star" onclick="setStar(1)">★</span>
+        <span class="star" onclick="setStar(2)">★</span>
+        <span class="star" onclick="setStar(3)">★</span>
+        <span class="star" onclick="setStar(4)">★</span>
+        <span class="star" onclick="setStar(5)">★</span>
+      </div>
+      <input type="hidden" id="f-note" value="0" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes de dégustation</label>
+      <textarea class="form-input" id="f-notes" placeholder="Arômes, saveurs, impressions..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary" onclick="saveWine()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ACCORDS = {
+  rouge:     ['Viande rouge','Agneau','Fromages affinés','Gibier','Pâtes bolognaise','Pizza','Charcuterie','Canard','Côte de bœuf'],
+  blanc:     ['Poisson','Fruits de mer','Volaille','Chèvre frais','Risotto','Sushi','Asperges','Saint-Jacques','Sole meunière'],
+  rosé:      ['Salade niçoise','Grillades légères','Tapas','Poissons grillés','Cuisine provençale','Fromages frais','Ratatouille'],
+  champagne: ['Huîtres','Caviar','Foie gras','Desserts fruités','Amuse-bouches','Saumon fumé','Langoustines'],
+  mousseux:  ['Apéritif','Fruits','Crème dessert','Gâteau léger','Cuisine asiatique légère','Sushi']
+};
+const TYPE_COLORS = { rouge:'#8b1a1a', blanc:'#c4973a', rosé:'#c45a7a', champagne:'#2e7d52', mousseux:'#2e7d52' };
+
+let wines = [], currentFilter = '', detailId = null, currentNote = 0;
+
+function load() { try { wines = JSON.parse(localStorage.getItem('cave_vins_v2') || '[]'); } catch(e) { wines = []; } }
+function save() { localStorage.setItem('cave_vins_v2', JSON.stringify(wines)); }
+function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function updateHeader() {
+  const total = wines.reduce((s,w) => s + (w.qty||0), 0);
+  document.getElementById('header-count').textContent = total + ' bouteille' + (total!==1?'s':'');
+}
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  const t = document.getElementById('tab-'+p);
+  if (t) t.classList.add('active');
+  const fab = document.getElementById('fab');
+  fab.style.display = (p === 'inventaire') ? 'flex' : 'none';
+  if (p === 'stats') renderStats();
+  if (p === 'inventaire') renderWines();
+  updateHeader();
+}
+
+function setFilter(type) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.type === type));
+  renderWines();
+}
+
+function renderWines() {
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  let list = wines.filter(w => {
+    const ok = !q || w.name.toLowerCase().includes(q) || (w.region||'').toLowerCase().includes(q) || (w.country||'').toLowerCase().includes(q);
+    return ok && (!currentFilter || w.type === currentFilter);
+  });
+  const el = document.getElementById('wine-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="big">🍷</div><p>${wines.length ? 'Aucun résultat pour cette recherche.' : 'Votre cave est vide.<br>Ajoutez votre premier vin !'}</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="wine-grid">${list.map(w => `
+    <div class="wine-card" onclick="showDetail('${w.id}')">
+      <span class="type-pill pill-${w.type}">${w.type.charAt(0).toUpperCase()+w.type.slice(1)}</span>
+      <div class="wine-name">${esc(w.name)}</div>
+      <div class="wine-sub">${[w.year, w.region].filter(Boolean).join(' · ')}</div>
+      <div class="wine-footer">
+        <span class="wine-qty">${w.qty} btl${w.qty!==1?'s':''}</span>
+        <span class="wine-price">${w.price ? w.price+'€' : ''}</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function showDetail(id) {
+  const w = wines.find(x => x.id === id);
+  if (!w) return;
+  detailId = id;
+  const stars = Array.from({length:5}, (_,i) =>
+    `<span style="color:${i<(w.note||0)?'#c4973a':'rgba(100,80,60,0.25)'}">★</span>`).join('');
+  const valeur = w.price && w.qty ? `<div class="info-row"><span class="info-key">Valeur totale</span><span style="font-weight:500">${Math.round(w.price*w.qty)} €</span></div>` : '';
+  const accords = (ACCORDS[w.type]||[]).slice(0,7).map(a=>`<span class="accord-tag">${a}</span>`).join('');
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-hero">
+      <span class="type-pill pill-${w.type}">${w.type.charAt(0).toUpperCase()+w.type.slice(1)}</span>
+      <div class="detail-name">${esc(w.name)}</div>
+      <div class="detail-sub">${[w.region, w.country, w.year].filter(Boolean).join(' · ')}</div>
+      <div class="detail-actions">
+        <button class="btn-edit" onclick="openEditModal('${id}')">Modifier</button>
+        <button class="btn-danger" onclick="deleteWine('${id}')">Supprimer</button>
+      </div>
+    </div>
+
+    <div class="section-card" style="margin-bottom:10px">
+      <div class="section-title">Stock</div>
+      <div class="info-row">
+        <span class="info-key">Quantité</span>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="adjustQty(-1)">−</button>
+          <span class="qty-num" id="qty-val">${w.qty}</span>
+          <button class="qty-btn" onclick="adjustQty(1)">+</button>
+        </div>
+      </div>
+      ${w.price ? `<div class="info-row"><span class="info-key">Prix / bouteille</span><span>${w.price} €</span></div>` : ''}
+      ${valeur}
+      ${w.note ? `<div class="info-row"><span class="info-key">Note</span><span>${stars}</span></div>` : ''}
+    </div>
+
+    <div class="section-card" style="margin-bottom:10px">
+      <div class="section-title">Accords mets-vins</div>
+      <div class="accord-wrap">${accords}</div>
+    </div>
+
+    ${w.notes ? `<div class="section-card"><div class="section-title">Notes de dégustation</div><p class="degustation-note">${esc(w.notes)}</p></div>` : ''}
+  `;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-detail').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('fab').style.display = 'none';
+}
+
+function adjustQty(d) {
+  const w = wines.find(x => x.id === detailId);
+  if (!w) return;
+  w.qty = Math.max(0, (w.qty||0) + d);
+  save(); updateHeader();
+  const el = document.getElementById('qty-val');
+  if (el) el.textContent = w.qty;
+}
+
+function deleteWine(id) {
+  if (!confirm('Supprimer ce vin de la cave ?')) return;
+  wines = wines.filter(x => x.id !== id);
+  save(); showPage('inventaire');
+}
+
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Ajouter un vin';
+  document.getElementById('edit-id').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-year').value = '';
+  document.getElementById('f-region').value = '';
+  document.getElementById('f-country').value = '';
+  document.getElementById('f-qty').value = 1;
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-type').value = 'rouge';
+  setStar(0);
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const w = wines.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('modal-title').textContent = 'Modifier le vin';
+  document.getElementById('edit-id').value = id;
+  document.getElementById('f-name').value = w.name||'';
+  document.getElementById('f-type').value = w.type||'rouge';
+  document.getElementById('f-year').value = w.year||'';
+  document.getElementById('f-region').value = w.region||'';
+  document.getElementById('f-country').value = w.country||'';
+  document.getElementById('f-qty').value = w.qty||1;
+  document.getElementById('f-price').value = w.price||'';
+  document.getElementById('f-notes').value = w.notes||'';
+  setStar(w.note||0);
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function setStar(v) {
+  currentNote = v;
+  document.getElementById('f-note').value = v;
+  document.querySelectorAll('#modal-stars .star').forEach((s,i) => s.classList.toggle('on', i < v));
+}
+
+function saveWine() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Le nom est obligatoire.'); return; }
+  const editId = document.getElementById('edit-id').value;
+  const data = {
+    name,
+    type: document.getElementById('f-type').value,
+    year: parseInt(document.getElementById('f-year').value)||null,
+    region: document.getElementById('f-region').value.trim(),
+    country: document.getElementById('f-country').value.trim(),
+    qty: parseInt(document.getElementById('f-qty').value)||0,
+    price: parseFloat(document.getElementById('f-price').value)||null,
+    note: currentNote,
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  if (editId) {
+    const idx = wines.findIndex(x => x.id === editId);
+    if (idx >= 0) wines[idx] = { ...wines[idx], ...data };
+  } else {
+    wines.push({ id: uid(), ...data });
+  }
+  save(); closeModal();
+  if (editId) showDetail(editId); else { renderWines(); updateHeader(); }
+}
+
+function renderStats() {
+  const total = wines.reduce((s,w) => s+(w.qty||0), 0);
+  const valeur = wines.reduce((s,w) => s+((w.price||0)*(w.qty||0)), 0);
+  const noted = wines.filter(w=>w.note);
+  const avgNote = noted.length ? (noted.reduce((s,w)=>s+w.note,0)/noted.length).toFixed(1) : '—';
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Bouteilles</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Références</div><div class="stat-value">${wines.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Valeur cave</div><div class="stat-value">${Math.round(valeur)}<span> €</span></div></div>
+    <div class="stat-card"><div class="stat-label">Note moy.</div><div class="stat-value">${avgNote}${avgNote!=='—'?'<span style="color:#c4973a"> ★</span>':''}</div></div>
+  `;
+
+  const types = ['rouge','blanc','rosé','champagne','mousseux'];
+  const counts = {};
+  types.forEach(t => counts[t] = wines.filter(w=>w.type===t).reduce((s,w)=>s+(w.qty||0),0));
+  const active = types.filter(t => counts[t]>0);
+  const max = Math.max(...active.map(t=>counts[t]), 1);
+  document.getElementById('bar-chart').innerHTML = active.length
+    ? active.map(t => `
+        <div class="bar-group">
+          <div class="bar-val">${counts[t]}</div>
+          <div class="bar-fill" style="height:${Math.round(counts[t]/max*80)}px;background:${TYPE_COLORS[t]}"></div>
+          <div class="bar-lbl">${t.charAt(0).toUpperCase()+t.slice(1)}</div>
+        </div>`).join('')
+    : '<p style="font-size:13px;color:var(--text3)">Aucune donnée</p>';
+
+  const regionMap = {};
+  wines.forEach(w => { if (w.region) regionMap[w.region] = (regionMap[w.region]||0)+(w.qty||0); });
+  const topR = Object.entries(regionMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxR = topR[0]?.[1]||1;
+  document.getElementById('region-list').innerHTML = topR.length
+    ? topR.map(([r,c])=>`
+        <div class="region-row">
+          <span style="font-size:13px">${esc(r)}</span>
+          <div class="region-bar-bg"><div class="region-bar-fill" style="width:${Math.round(c/maxR*100)}%"></div></div>
+          <span style="font-size:12px;color:var(--text3);min-width:30px;text-align:right">${c}</span>
+        </div>`).join('')
+    : '<p style="font-size:13px;color:var(--text3)">Aucune région renseignée</p>';
+
+  const avail = wines.filter(w=>w.qty>0);
+  if (!avail.length) { document.getElementById('accord-suggestions').innerHTML = '<p style="font-size:13px;color:var(--text3)">Ajoutez des vins pour voir les suggestions.</p>'; return; }
+  const allA = {};
+  avail.forEach(w => (ACCORDS[w.type]||[]).forEach(a => allA[a] = (allA[a]||0)+1));
+  const topA = Object.entries(allA).sort((a,b)=>b[1]-a[1]).slice(0,9);
+  document.getElementById('accord-suggestions').innerHTML = `<div class="accord-wrap">${topA.map(([a])=>`<span class="accord-tag">${a}</span>`).join('')}</div>`;
+}
+
+document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
+
+load(); renderWines(); updateHeader();
+</script>
+</body>
+</html>
